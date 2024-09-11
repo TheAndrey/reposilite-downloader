@@ -17,3 +17,6 @@ indent_size = 2
 
 [*.lock]
 ij_formatter_enabled = false
+
+[*.md]
+trim_trailing_whitespace = false
