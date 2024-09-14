@@ -10,6 +10,7 @@ max_line_length = 250
 tab_width = 4
 ij_continuation_indent_size = 8
 ij_smart_tabs = false
+ij_typescript_spaces_within_union_types = false
 
 [*.json]
 indent_style = space
