@@ -1,6 +1,6 @@
 import axios, {AxiosError} from "axios";
-import {appendFile, writeFile} from "node:fs";
-import {ALLOWED_FILE_EXTENSIONS, fileCallback, getFileExtension, removeBackslash} from "./utils.js";
+import {writeFile} from "node:fs";
+import {ALLOWED_FILE_EXTENSIONS, getFileExtension, removeBackslash} from "./utils.js";
 import * as console from "node:console";
 import {MavenIndex} from "./responses.js";
 
@@ -24,33 +24,37 @@ async function main() {
 		}
 	}
 
-	await writeFile(outputFile, '', fileCallback);
+	const urls = await scanRecursive(repoUrl, '/', outputFile);
 
-	scanRecursive(repoUrl, '/', outputFile);
+	writeFile(outputFile, urls.join("\n") + "\n", {encoding: 'utf8'}, err => {
+		if (err) throw err;
+	});
 
 	console.info('Done');
 }
 
-async function scanRecursive(repoUrl: string, path: string, file: string) {
+async function scanRecursive(repoUrl: string, path: string, file: string): Promise<URL[]> {
 	const response = await fetchDetails(repoUrl, path);
+	const urls: URL[] = [];
 	path = removeBackslash(path);
 
 	for (const item of response.files) {
 		if (item.type === 'DIRECTORY') {
-			await scanRecursive(repoUrl, path + '/' + item.name, file);
+			urls.push(...await scanRecursive(repoUrl, path + '/' + item.name, file));
 
 		} else if (item.type === 'FILE') {
 			const ext = getFileExtension(item.name);
 
 			if (ALLOWED_FILE_EXTENSIONS.includes(ext)) {
-				const url = repoUrl + path + '/' + item.name;
-				appendFile(file, url + "\n", {encoding: 'utf8'}, fileCallback);
+				urls.push(new URL(repoUrl + path + '/' + item.name));
 			}
 
 		} else {
 			console.warn('Unknown item type:', item);
 		}
 	}
+
+	return urls;
 }
 
 async function fetchDetails(repoUrl: string, path: string): Promise<MavenIndex> {

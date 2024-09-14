@@ -7,12 +7,6 @@ export function removeBackslash(str: string): string {
 	return str;
 }
 
-export function fileCallback(err: any): void {
-	if (err) {
-		throw err;
-	}
-}
-
 export function getFileExtension(fileName: string): string {
 	const dotAt = fileName.lastIndexOf('.');
 
